@@ -1,0 +1,81 @@
+name: azure-img-deploy
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag a desplegar (latest, vX.Y, o SHA)"
+        required: false
+        default: latest
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: false
+        default: latest
+    repository:
+      type: string
+      required: false
+      default: ''
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  SSH_HOST: ${{ secrets.SSH_HOST }}
+  SSH_USER: ${{ secrets.SSH_USER }}
+  SSH_PORT: ${{ secrets.SSH_PORT || 22 }}
+  DEPLOY_DIR: /opt/app
+
+jobs:
+  wait_ssh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait SSH
+        run: |
+          echo "Waiting SSH on ${{ env.SSH_HOST }}:${{ env.SSH_PORT }} ..."
+          for i in {1..60}; do
+            if nc -z ${{ env.SSH_HOST }} ${{ env.SSH_PORT }}; then
+              echo "SSH up."; exit 0
+            fi
+            sleep 5
+          done
+          echo "Timeout waiting SSH." && exit 1
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [wait_ssh]
+    steps:
+      - name: Img calculation (lowercase GHCR)
+        id: img
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPO_LC="$(echo "${{ inputs.repository || github.repository }}" | tr '[:upper:]' '[:lower:]')"
+          echo "image=ghcr.io/${REPO_LC}" >> "$GITHUB_OUTPUT"
+          echo "tag=${{ github.event.inputs.tag || 'latest' }}" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy by SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USER }}
+          port: ${{ env.SSH_PORT }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -euo pipefail
+            IMAGE="${{ steps.img.outputs.image }}"
+            TAG="${{ steps.img.outputs.tag }}"
+
+            sudo mkdir -p "${{ env.DEPLOY_DIR }}"
+            cd "${{ env.DEPLOY_DIR }}"
+
+            # Login GHCR con PAT (read:packages)
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+            export IMAGE="$IMAGE"
+            export TAG="$TAG"
+
+            docker compose -f deploy-compose.yml pull
+            docker compose -f deploy-compose.yml up -d --remove-orphans
+            docker image prune -af || true
