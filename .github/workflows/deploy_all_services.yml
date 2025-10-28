@@ -9,7 +9,8 @@ on:
         default: false
 
 permissions:
-  repository-projects: read
+  contents: read
+  packages: write
 
 jobs:
   start-vm:
