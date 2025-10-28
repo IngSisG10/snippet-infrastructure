@@ -12,10 +12,10 @@ on:
         type: string
         required: false
         default: latest
-    repository:
-      type: string
-      required: false
-      default: ''
+      repository:
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: read
