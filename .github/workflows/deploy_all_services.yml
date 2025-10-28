@@ -16,7 +16,7 @@ jobs:
 
   deploy-printscript-service:
     needs: start-vm
-    uses: IngSisG10/printscript-service/.github/workflows/new_version_workflow.yml
+    uses: IngSisG10/printscript-service/.github/workflows/new_version_workflow.yml@main
     secrets: inherit
 
   maybe-stop-vm:
