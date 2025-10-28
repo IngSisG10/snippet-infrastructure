@@ -1,0 +1,28 @@
+name: deploy-all-services
+on:
+  workflow_dispatch:
+    inputs:
+      stop-vm-after:
+        description: 'stop the virtual machine after execution'
+        type: boolean
+        required: true
+        default: false
+
+
+jobs:
+  start-vm:
+    uses: ./.github/workflows/azure_start_vm.yml
+    secrets: inherit
+
+  deploy-printscript-service:
+    needs: start-vm
+    uses: IngSisG10/printscript-service/.github/workflows/new_version_workflow.yml
+    secrets: inherit
+
+  maybe-stop-vm:
+    needs:
+      - deploy-printscript-service
+      # TODO add rest of services
+    if: inputs.stop-vm-after
+    uses: ./.github/workflows/azure_stop_vm.yml
+    secrets: inherit
