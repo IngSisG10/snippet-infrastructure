@@ -8,6 +8,8 @@ on:
         required: true
         default: false
 
+permissions:
+  repository-projects: read
 
 jobs:
   start-vm:
