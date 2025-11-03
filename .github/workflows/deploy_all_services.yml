@@ -23,7 +23,7 @@ jobs:
     with:
       repository: IngSisG10/printscript-service
       ref: main
-      token: ${{ secrets.GITHUB_TOKEN }}
+      token: ${{ secrets.GH_TOKEN }}
     secrets: inherit
 
   # TODO add rest of services
