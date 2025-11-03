@@ -1,4 +1,5 @@
 name: deploy-all-services
+
 on:
   workflow_dispatch:
     inputs:
@@ -11,6 +12,8 @@ on:
 permissions:
   contents: read
   packages: write
+  # si algún job hace azure/login con OIDC:
+  id-token: write
 
 jobs:
   start-vm:
@@ -20,11 +23,11 @@ jobs:
   deploy-printscript-service:
     needs: start-vm
     uses: IngSisG10/printscript-service/.github/workflows/new_version_workflow.yml@main
-    secrets: inherit
     with:
       repository: IngSisG10/printscript-service
       ref: main
-      token: ${{ secrets.GH_TOKEN }}
+    secrets:
+      REPO_PAT: ${{ secrets.GH_TOKEN }}   # ← pasa el PAT al reusable aquí
 
   # TODO add rest of services
 
