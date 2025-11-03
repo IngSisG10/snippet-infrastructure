@@ -20,7 +20,13 @@ jobs:
   deploy-printscript-service:
     needs: start-vm
     uses: IngSisG10/printscript-service/.github/workflows/new_version_workflow.yml@main
+    with:
+      repository: IngSisG10/printscript-service
+      ref: main
+      token: ${{ secrets.GITHUB_TOKEN }}
     secrets: inherit
+
+  # TODO add rest of services
 
   maybe-stop-vm:
     needs:
