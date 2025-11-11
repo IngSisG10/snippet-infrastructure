@@ -12,10 +12,6 @@ on:
         type: string
         required: false
         default: latest
-      repository:
-        type: string
-        required: false
-        description: "owner/repo to use for image name (optional). If omitted uses current repo."
 
 
 permissions:
@@ -38,7 +34,7 @@ jobs:
       - name: Set tags
         id: tags
         run: |
-          REPO_LC=$(echo "${{ inputs.repository || github.repository }}" | tr '[:upper:]' '[:lower:]')
+          REPO_LC=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           IMAGE="ghcr.io/${REPO_LC}"
           TAG="${{ github.event.inputs.tag || 'latest' }}"
           echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
