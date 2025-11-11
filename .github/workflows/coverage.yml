@@ -1,0 +1,48 @@
+name: coverage.yml
+
+on:
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Gradle (with cache)
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Run tests and Kover coverage
+        run: ./gradlew clean test koverXmlReport koverHtmlReport --stacktrace
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload coverage HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: kover-html
+          path: build/reports/kover/html
+
+      - name: PR comment (Kover)
+        if: github.event_name == 'pull_request'
+        uses: mi-kas/kover-report@v1
+        with:
+          path: ${{ github.workspace }}/build/reports/kover/report.xml
+          title: "Kover Coverage"
+          update-comment: true
+          min-coverage-overall: 80
+          min-coverage-changed-files: 0
