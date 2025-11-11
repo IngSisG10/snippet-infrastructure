@@ -1,0 +1,87 @@
+version: '3.9'
+
+# certbot | fijate probar por otro lado - challenge http y https
+
+# duckdns -> dominio
+
+# https -> certbot Que resuelve los challenges en este contexto. (Fijate de chequear otro)
+
+
+services:
+  nginx:
+    image: nginx:latest
+    container_name: "reverse-proxy"
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "81:81" # to check nginx
+      - "443:443"
+    volumes:
+      - ./static/:/usr/share/nginx/html:ro
+      - ./conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro # todo; cambiar la ruta donde esta el conf.d
+      - ./nginx/static:/usr/share/nginx/html:ro
+      - ./nginx/certs:/etc/letsencrypt:ro
+    depends_on:
+      - snippet_service
+      - auth_service
+      - my-server
+
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./nginx/certs:/etc/letsencrypt
+      - ./nginx/static:/var/www/certbot
+    entrypoint: >
+      /bin/sh -c "trap exit TERM;
+      while :; do
+        certbot certonly --webroot -w /var/www/certbot
+          -d your-domain.duckdns.org
+          --email your-email@example.com
+          --agree-tos --non-interactive;
+        sleep 12h;
+      done"
+
+
+  duckdns:
+    image: linuxserver/duckdns
+    container_name: duckdns
+    restart: unless-stopped
+    environment:
+      - SUBDOMAINS=your_subdomain # reemplazar por tu subdominio
+      - TOKEN=your_token # reemplazar por tu token de duckdns
+      - TZ = America/Argentina/Buenos_Aires
+    volumes:
+      - ./duckdns:/config
+
+
+  snippet_service:
+    container_name: "snippet-service"
+    image: nginx
+    # ports:
+    #   - 8081:80
+    volumes:
+      - ./snippet-service/:/usr/share/nginx/html:ro
+
+  auth_service:
+    container_name: "auth-service"
+    image: nginx
+    # ports:
+    #   - 8082:80
+    volumes:
+      - ./auth-service/:/usr/share/nginx/html:ro
+
+  # todo
+  my-server: # ui
+    container_name: "my-server"
+    build: ./server # en la carpeta de server, resuelve esto
+    # /server
+    # FROM nginx
+    #COPY index.html /usr/share/nginx/html/index.html
+    # Lo resuelve con esto particularmente, y el index.html es la ui como tal
+    ports:
+      - "8083:80"
+
+    # Tenemos que agregar tanto duckdns como certbot
