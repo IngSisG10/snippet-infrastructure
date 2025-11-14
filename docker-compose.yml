@@ -1,0 +1,75 @@
+version: '3.9'
+
+services:
+  nginx:
+    image: nginx:latest
+    container_name: "reverse-proxy"
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/static:/usr/share/nginx/html:ro
+      - ./nginx/certs:/etc/letsencrypt:ro
+      - ./nginx/static:/var/www/certbot:ro
+    depends_on:
+      - snippet_service
+      - auth_service
+      # - ui
+    networks:
+        - app_network
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./nginx/certs:/etc/letsencrypt
+      - ./nginx/static:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --quiet; sleep 12h & wait $${!}; done;'"
+    networks:
+        - app_network
+
+
+  duckdns:
+    image: linuxserver/duckdns
+    container_name: duckdns
+    restart: unless-stopped
+    environment:
+      - SUBDOMAINS=ingsisg10
+      - TOKEN=${DUCK_DNS_TOKEN}
+      - TZ = America/Argentina/Buenos_Aires
+    volumes:
+      - ./duckdns:/config
+
+
+  snippet_service:
+    container_name: "snippet_service_infra"
+    image: nginx:alpine
+    volumes:
+      - ./snippet-service/:/usr/share/nginx/html:ro
+    expose:
+      - "80"
+    networks:
+      - app_network
+
+  auth_service:
+    container_name: "auth_service_infra"
+    image: nginx
+    volumes:
+      - ./auth-service/:/usr/share/nginx/html:ro
+    expose:
+      - "80"
+    networks:
+      - app_network
+
+#  ui:
+#    container_name: "printscript_ui_infra"
+#    build: ./ui-server
+#    volumes:
+#      - ./ui:/usr/share/nginx/html:ro
+
+
+networks:
+  app_network:
+    driver: bridge
