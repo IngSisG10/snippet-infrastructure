@@ -10,8 +10,11 @@ COPY nginx/static /usr/share/nginx/html
 # Copy the SSL certificates
 COPY nginx/certs /etc/letsencrypt
 
+# Copy the startup script
+COPY nginx/startup.sh /startup.sh
+
 # Expose port 80
 EXPOSE 80
 
-# Start Nginx when the container launches
-CMD ["nginx", "-g", "daemon off;"]
+# Start Nginx using the startup script
+ENTRYPOINT ["/startup.sh"]
