@@ -1,8 +1,21 @@
 version: '3.9'
 
 services:
+  newrelic-infra:
+    image: newrelic/infrastructure:latest
+    container_name: newrelic-infra
+    privileged: true
+    pid: host
+    volumes:
+      - /:/host:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./newrelic-infra/newrelic-infra.yml:/etc/newrelic-infra.yml:ro
+    restart: unless-stopped
+    networks:
+        - app_network
+
   nginx:
-    image: nginx:latest
+    image: ghcr.io/ingsisg10/snippet-infrastructure:latest
     container_name: "reverse-proxy"
     restart: unless-stopped
     ports:
@@ -38,28 +51,28 @@ services:
     environment:
       - SUBDOMAINS=ingsisg10
       - TOKEN=${DUCK_DNS_TOKEN}
-      - TZ = America/Argentina/Buenos_Aires
+      - TZ=America/Argentina/Buenos_Aires
     volumes:
       - ./duckdns:/config
 
 
   snippet_service:
     container_name: "snippet_service_infra"
-    image: nginx:alpine
-    volumes:
-      - ./snippet-service/:/usr/share/nginx/html:ro
+    image: ghcr.io/ingsisg10/snippet-service:latest
     expose:
-      - "80"
+      - "8080"
+    environment:
+      - NEW_RELIC_LICENSE_KEY=${NEW_RELIC_LICENSE_KEY}
     networks:
       - app_network
 
   auth_service:
     container_name: "auth_service_infra"
-    image: nginx
-    volumes:
-      - ./auth-service/:/usr/share/nginx/html:ro
+    image: ghcr.io/ingsisg10/auth-service:latest
     expose:
-      - "80"
+      - "8080"
+    environment:
+      - NEW_RELIC_LICENSE_KEY=${NEW_RELIC_LICENSE_KEY}
     networks:
       - app_network
 
