@@ -1,5 +1,8 @@
 name: docker-img-to-ghcr
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       tag:

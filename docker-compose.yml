@@ -15,21 +15,20 @@ services:
         - app_network
 
   nginx:
-    image: ghcr.io/ingsisg10/snippet-infrastructure:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
     container_name: "reverse-proxy"
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/conf.d/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/static:/usr/share/nginx/html:ro
-      - ./nginx/certs:/etc/letsencrypt:ro
-      - ./nginx/static:/var/www/certbot:ro
+      - ./nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+      - ./nginx-proxy-manager/data/certbot:/var/www/certbot
     depends_on:
       - snippet_service
       - auth_service
-      # - ui
     networks:
         - app_network
 
@@ -37,12 +36,11 @@ services:
     image: certbot/certbot
     container_name: certbot
     volumes:
-      - ./nginx/certs:/etc/letsencrypt
-      - ./nginx/static:/var/www/certbot
+      - ./nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+      - ./nginx-proxy-manager/data/certbot:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --quiet; sleep 12h & wait $${!}; done;'"
     networks:
         - app_network
-
 
   duckdns:
     image: linuxserver/duckdns
@@ -54,7 +52,6 @@ services:
       - TZ=America/Argentina/Buenos_Aires
     volumes:
       - ./duckdns:/config
-
 
   snippet_service:
     container_name: "snippet_service_infra"
@@ -81,7 +78,6 @@ services:
 #    build: ./ui-server
 #    volumes:
 #      - ./ui:/usr/share/nginx/html:ro
-
 
 networks:
   app_network:
