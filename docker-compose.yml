@@ -1,19 +1,6 @@
 version: '3.9'
 
 services:
-  newrelic-infra:
-    image: newrelic/infrastructure:latest
-    container_name: newrelic-infra
-    privileged: true
-    pid: host
-    volumes:
-      - /:/host:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./newrelic-infra/newrelic-infra.yml:/etc/newrelic-infra.yml:ro
-    restart: unless-stopped
-    networks:
-        - app_network
-
   nginx:
     build:
       context: .
@@ -24,60 +11,57 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx-proxy-manager/letsencrypt:/etc/letsencrypt
-      - ./nginx-proxy-manager/data/certbot:/var/www/certbot
-#    depends_on:
-#      - snippet_service
-#      - auth_service
+      - ./nginx/conf:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/letsencrypt
+      - ./nginx/www:/var/www/certbot
     networks:
-        - app_network
+      - app_network
 
   certbot:
     image: certbot/certbot
-    container_name: certbot
+    container_name: "certbot"
     volumes:
-      - ./nginx-proxy-manager/letsencrypt:/etc/letsencrypt
-      - ./nginx-proxy-manager/data/certbot:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --quiet; sleep 12h & wait $${!}; done;'"
+      - ./nginx/ssl:/etc/letsencrypt
+      - ./nginx/www:/var/www/certbot
+      - ./nginx/conf:/etc/nginx/conf.d
+    # El comando se ejecuta al iniciar el contenedor.
+    command: >
+      sh -c "
+        while true; do
+          certbot renew --quiet --webroot --webroot-path=/var/www/certbot \
+            --post-hook 'nginx -s reload'
+          sleep 12h
+        done
+      "
     networks:
-        - app_network
+      - app_network
 
+  # ... (Tus otros servicios)
   duckdns:
     image: linuxserver/duckdns
     container_name: duckdns
     restart: unless-stopped
     environment:
-      - SUBDOMAINS=grupo10ingsis
+      - SUBDOMAINS=ingsisg10
       - TOKEN=${DUCK_DNS_TOKEN}
-      - TZ=America/Argentina/Buenos_Aires
     volumes:
       - ./duckdns:/config
 
-#  snippet_service:
-#    container_name: "snippet_service_infra"
-#    image: ghcr.io/ingsisg10/snippet-service:latest
-#    expose:
-#      - "8080"
-##    environment:
-##      - NEW_RELIC_LICENSE_KEY=${NEW_RELIC_LICENSE_KEY}
-#    networks:
-#      - app_network
+  snippet_service:
+    container_name: "snippet_service_infra"
+    image: ghcr.io/ingsisg10/snippet-service:latest
+    expose:
+      - "8080"
+    networks:
+      - app_network
 
-#  auth_service:
-#    container_name: "auth_service_infra"
-#    image: ghcr.io/ingsisg10/auth-service:latest
-#    expose:
-#      - "8080"
-##    environment:
-##      - NEW_RELIC_LICENSE_KEY=${NEW_RELIC_LICENSE_KEY}
-#    networks:
-#      - app_network
-
-#  ui:
-#    container_name: "printscript_ui_infra"
-#    build: ./ui-server
-#    volumes:
-#      - ./ui:/usr/share/nginx/html:ro
+  auth_service:
+    container_name: "auth_service_infra"
+    image: ghcr.io/ingsisg10/auth-service:latest
+    expose:
+      - "8080"
+    networks:
+      - app_network
 
 networks:
   app_network:
