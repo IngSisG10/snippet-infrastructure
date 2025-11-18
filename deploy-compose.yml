@@ -40,7 +40,7 @@ services:
     container_name: duckdns
     restart: unless-stopped
     environment:
-      - SUBDOMAINS=ingsisg10
+      - SUBDOMAINS=grupo10ingsis
       - TOKEN=${DUCK_DNS_TOKEN}
     volumes:
       - ./duckdns:/config
@@ -48,11 +48,13 @@ services:
   # --- STACK DE PRINTSCRIPT ---
 
   printscript-service:
-    image: ghcr.io/austral-ingsis/snippet-service:latest
+    image: ghcr.io/ingsisg10/snippet-service:latest
     container_name: printscript-service
     ports:
       - "8080:8080"
     restart: unless-stopped
+    networks:
+       - shared_network
 
   # --- STACK DE AUTENTICACIÓN ---
 
@@ -68,6 +70,7 @@ services:
       - auth-db
     networks:
       - auth-net
+      - shared_network
 
   auth-db:
     image: postgres:15
@@ -81,11 +84,12 @@ services:
       - auth-data:/var/lib/postgresql/data
     networks:
       - auth-net
+      - shared_network
 
   # --- STACK DE SNIPPETS Y ASSETS ---
 
   snippet-service:
-    image: ghcr.io/austral-ingsis/snippet-service:latest
+    image: ghcr.io/ingsisg10/snippet-service:latest
     container_name: snippet-service
     restart: unless-stopped
     environment:
@@ -120,7 +124,7 @@ services:
       - shared_network
 
   asset-service:
-    image: ghcr.io/austral-ingsis/snippet-asset-service:main.14
+    image: ghcr.io/austral-ingsis/snippet-asset-service:latest
     container_name: asset-service
     restart: unless-stopped
     environment:
@@ -154,4 +158,4 @@ networks:
   auth-net:
     driver: bridge
   shared_network:
-    external: true
+    driver: bridge
