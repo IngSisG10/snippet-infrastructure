@@ -11,10 +11,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    volumes:
-      - ./nginx/conf:/etc/nginx/conf.d
-      - ./nginx/ssl:/etc/letsencrypt
-      - ./nginx/www:/var/www/certbot
     networks:
       - proxy-net
       - auth-net
@@ -34,6 +30,15 @@ services:
       sh -c "while true; do certbot renew --quiet --webroot --webroot-path=/var/www/certbot; sleep 12h; done"
     networks:
       - proxy-net
+
+#  certbot:
+#    image: certbot/certbot
+#    container_name: "certbot"
+#    restart: "no"
+#    volumes:
+#      - ./nginx/ssl:/etc/letsencrypt
+#      - ./nginx/www:/var/www/certbot
+#    command: [ "tail", "-f", "/dev/null" ]  # Keep container alive but do nothing
 
   duckdns:
     image: linuxserver/duckdns
