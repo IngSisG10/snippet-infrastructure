@@ -8,6 +8,10 @@ services:
     image: ghcr.io/ingsisg10/snippet-infrastructure:latest
     container_name: "reverse-proxy"
     restart: unless-stopped
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
     ports:
       - "80:80"
       - "443:443"
@@ -24,21 +28,12 @@ services:
     container_name: "certbot"
     restart: unless-stopped
     volumes:
-      - ./nginx/ssl:/etc/letsencrypt
-      - ./nginx/www:/var/www/certbot
-    command: >
-      sh -c "while true; do certbot renew --quiet --webroot --webroot-path=/var/www/certbot; sleep 12h; done"
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    command: [ "tail", "-f", "/dev/null" ]  # Keep container alive but do nothing
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
     networks:
       - proxy-net
-
-#  certbot:
-#    image: certbot/certbot
-#    container_name: "certbot"
-#    restart: "no"
-#    volumes:
-#      - ./nginx/ssl:/etc/letsencrypt
-#      - ./nginx/www:/var/www/certbot
-#    command: [ "tail", "-f", "/dev/null" ]  # Keep container alive but do nothing
 
   duckdns:
     image: linuxserver/duckdns
