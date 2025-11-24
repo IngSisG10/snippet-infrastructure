@@ -5,7 +5,7 @@ services:
   # --- CAPA DE ENTRADA (REVERSE PROXY Y SSL) ---
 
   nginx:
-    image: nginx:latest  # o incluso podés seguir usando tu imagen, da igual
+    image: ghcr.io/ingsisg10/snippet-infrastructure:latest  # o incluso podés seguir usando tu imagen, da igual
     container_name: "reverse-proxy"
     restart: unless-stopped
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
