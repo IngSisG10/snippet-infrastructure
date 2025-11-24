@@ -45,6 +45,18 @@ services:
     volumes:
       - ./duckdns:/config
 
+  # -- STACK DE UI ---
+
+  printscript-ui:
+    image: ghcr.io/ingsisg10/printscript-ui:latest
+    container_name: printscript-ui
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_NGINX_URL=https://grupo10ingsis.duckdns.org
+    networks:
+      - shared_network
+
   # --- STACK DE PRINTSCRIPT ---
 
   printscript-service:
@@ -93,9 +105,9 @@ services:
     container_name: snippet-service
     restart: unless-stopped
     environment:
-      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-snippet_db}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
+      DB_URL: jdbc:postgresql://db:5432/${SNIPPET_DB_NAME}
+      DB_USERNAME: ${SNIPPET_DB_USER}
+      DB_PASSWORD: ${SNIPPET_DB_PASSWORD}
       PRINTSCRIPT_SERVICE_URL: http://printscript-service:8080
       ASSET_SERVICE_URL: http://asset-service:8080
       AUTH_SERVICE_URL: http://auth-service:8081

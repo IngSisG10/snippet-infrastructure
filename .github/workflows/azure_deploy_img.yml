@@ -75,7 +75,9 @@ jobs:
 
             export IMAGE="$IMAGE"
             export TAG="$TAG"
+            
+            cd ~
 
-            docker compose -f deploy-compose.yml pull
-            docker compose -f deploy-compose.yml up -d --remove-orphans
+            docker compose -f "${{ env.DEPLOY_DIR }}"deploy-compose.yml pull
+            docker compose -f "${{ env.DEPLOY_DIR }}"deploy-compose.yml up -d --remove-orphans
             docker image prune -af || true
