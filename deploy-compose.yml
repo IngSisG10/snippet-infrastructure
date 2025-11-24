@@ -48,7 +48,7 @@ services:
   # --- STACK DE PRINTSCRIPT ---
 
   printscript-service:
-    image: ghcr.io/ingsisg10/snippet-service:latest
+    image: ghcr.io/ingsisg10/printscript-service:latest
     container_name: printscript-service
     ports:
       - "8080:8080"
