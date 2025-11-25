@@ -1,0 +1,27 @@
+name: infrastructure_deployment.yml
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+
+  start-azure:
+    uses: ./.github/workflows/azure_start_vm.yml
+    secrets: inherit
+
+  publish-image-to-ghcr:
+    uses: ./.github/workflows/publish_docker_img_to_ghcr.yml
+    secrets: inherit
+
+  deploy-infra-image-to-azure-vm:
+    needs:
+      - start-azure
+      - publish-image-to-ghcr
+    uses: ./.github/workflows/azure_deploy_img.yml
+    secrets: inherit
+

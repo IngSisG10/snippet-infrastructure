@@ -46,6 +46,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [wait_ssh]
     steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+
       - name: Img calculation (lowercase GHCR)
         id: img
         shell: bash
@@ -54,6 +58,18 @@ jobs:
           REPO_LC="$(echo "${{ inputs.repository || github.repository }}" | tr '[:upper:]' '[:lower:]')"
           echo "image=ghcr.io/${REPO_LC}" >> "$GITHUB_OUTPUT"
           echo "tag=${{ github.event.inputs.tag || 'latest' }}" >> "$GITHUB_OUTPUT"
+
+      - name: Setup SSH key for SCP
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Copy deploy-compose.yml to VM
+        run: |
+          scp -o StrictHostKeyChecking=no -P ${{ env.SSH_PORT }} \
+            ./deploy-compose.yml \
+            ${{ env.SSH_USER }}@${{ env.SSH_HOST }}:${{ env.DEPLOY_DIR }}/deploy-compose.yml
 
       - name: Deploy by SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -78,6 +94,6 @@ jobs:
             
             cd ~
 
-            docker compose -f "${{ env.DEPLOY_DIR }}"deploy-compose.yml pull
-            docker compose -f "${{ env.DEPLOY_DIR }}"deploy-compose.yml up -d --remove-orphans
+            docker compose -f ${{ env.DEPLOY_DIR }}/deploy-compose.yml pull
+            docker compose -f ${{ env.DEPLOY_DIR }}/deploy-compose.yml up -d --remove-orphans
             docker image prune -af || true
