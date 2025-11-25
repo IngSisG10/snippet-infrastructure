@@ -10,7 +10,12 @@ on:
 permissions:
   contents: read
   packages: write
-  id-token: write
+
+env:
+  SSH_HOST: ${{ secrets.SSH_HOST }}
+  SSH_USER: ${{ secrets.SSH_USER }}
+  SSH_PORT: ${{ secrets.SSH_PORT || 22 }}
+  DEPLOY_DIR: /opt/app
 
 jobs:
   wait_ssh:
@@ -44,8 +49,7 @@ jobs:
           ORG="${REPO_FULL%/*}"               # "ingsisg10"
           BASE_REPO="${REPO_FULL##*/}"        # "auth"
 
-          # Regla que dijiste: {nombre-del-repo} + "-service"
-          SERVICE_NAME="${BASE_REPO}-service" # "auth-service"
+          SERVICE_NAME="${BASE_REPO}" # "auth-service"
 
           IMAGE_REPO="ghcr.io/${ORG}/${SERVICE_NAME}"  # "ghcr.io/ingsisg10/auth-service"
           TAG="${{ inputs.tag || 'latest' }}"

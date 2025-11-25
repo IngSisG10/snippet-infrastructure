@@ -9,9 +9,6 @@ permissions:
   packages: write
 
 jobs:
-  publish-package:
-    uses: ./.github/workflows/publish_packages.yml
-    secrets: inherit
 
   publish-img:
     uses: ./.github/workflows/publish_docker_img_to_ghcr.yml
