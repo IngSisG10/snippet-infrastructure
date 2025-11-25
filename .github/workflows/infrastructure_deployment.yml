@@ -1,0 +1,14 @@
+name: infrastructure_deployment.yml
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish-image-to-ghcr:
+    uses: ./.github/workflows/publish_docker_img_to_ghcr.yml
+    secrets: inherit
+
+  deploy-infra-image-to-azure:
+    uses: ./.github/workflows/azure_deploy_img.yml
+    secrets: inherit

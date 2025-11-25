@@ -1,0 +1,21 @@
+name: publish_components.yml
+
+on:
+  workflow_dispatch: {}
+  workflow_call: {}
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish-package:
+    uses: ./.github/workflows/publish_packages.yml
+    secrets: inherit
+
+  publish-img:
+    uses: ./.github/workflows/publish_docker_img_to_ghcr.yml
+    secrets: inherit

@@ -105,7 +105,7 @@ services:
     container_name: snippet-service
     restart: unless-stopped
     environment:
-      DB_URL: jdbc:postgresql://db:5432/${SNIPPET_DB_NAME}
+      DB_URL: jdbc:postgresql://snippet_db:5432/${SNIPPET_DB_NAME}
       DB_USERNAME: ${SNIPPET_DB_USER}
       DB_PASSWORD: ${SNIPPET_DB_PASSWORD}
       PRINTSCRIPT_SERVICE_URL: http://printscript-service:8080

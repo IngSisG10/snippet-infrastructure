@@ -1,0 +1,90 @@
+name: azure_deploy_services.yml
+on:
+  workflow_call:
+    inputs:
+      is_prod:
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  wait_ssh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait SSH
+        run: |
+          echo "Waiting SSH on ${{ env.SSH_HOST }}:${{ env.SSH_PORT }} ..."
+          for i in {1..60}; do
+            if nc -z ${{ env.SSH_HOST }} ${{ env.SSH_PORT }}; then
+              echo "SSH up."; exit 0
+            fi
+            sleep 5
+          done
+          echo "Timeout waiting SSH." && exit 1
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs:
+      - wait_ssh
+    steps:
+      - name: Calculate image & service from caller repo
+        id: img
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Repositorio que llama al workflow, por ejemplo:
+          # github.repository = "ingsisg10/auth"
+          REPO_FULL="${GITHUB_REPOSITORY,,}"   # lower-case
+          ORG="${REPO_FULL%/*}"               # "ingsisg10"
+          BASE_REPO="${REPO_FULL##*/}"        # "auth"
+
+          # Regla que dijiste: {nombre-del-repo} + "-service"
+          SERVICE_NAME="${BASE_REPO}-service" # "auth-service"
+
+          IMAGE_REPO="ghcr.io/${ORG}/${SERVICE_NAME}"  # "ghcr.io/ingsisg10/auth-service"
+          TAG="${{ inputs.tag || 'latest' }}"
+
+          echo "service=${SERVICE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "image=${IMAGE_REPO}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy single service by SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USER }}
+          port: ${{ env.SSH_PORT }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -euo pipefail
+
+            SERVICE="${{ steps.img.outputs.service }}"
+            IMAGE="${{ steps.img.outputs.image }}"
+            TAG="${{ steps.img.outputs.tag }}"
+
+            echo ">>> Deploying service: ${SERVICE}"
+            echo ">>> Image: ${IMAGE}:${TAG}"
+
+            sudo mkdir -p "${{ env.DEPLOY_DIR }}"
+            cd "${{ env.DEPLOY_DIR }}"
+
+            # Login GHCR con PAT (read:packages)
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+            
+            # Me voy devuelta al home
+            cd ~
+
+            # Pull solo de ese servicio (usa la imagen definida en el compose)
+            docker compose -f ${{ env.DEPLOY_DIR }}/deploy-compose.yml pull "${SERVICE}"
+
+            # Levanto / recreo solo ese servicio sin tocar dependencias
+            docker compose -f ${{ env.DEPLOY_DIR }}/deploy-compose.yml up -d --no-deps "${SERVICE}"
+
+            # Limpieza de imágenes viejas
+            docker image prune -af || true
