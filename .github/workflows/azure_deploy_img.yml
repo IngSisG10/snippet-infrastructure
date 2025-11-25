@@ -46,6 +46,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [wait_ssh]
     steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+
       - name: Img calculation (lowercase GHCR)
         id: img
         shell: bash
