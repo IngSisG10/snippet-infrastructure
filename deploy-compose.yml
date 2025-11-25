@@ -50,8 +50,6 @@ services:
   printscript-ui:
     image: ghcr.io/ingsisg10/printscript-ui:latest
     container_name: printscript-ui
-    environment:
-      - VITE_NGINX_URL=https://grupo10ingsis.duckdns.org
     networks:
       - shared_network
 
@@ -74,6 +72,8 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://auth-db:5432/${AUTH_DB_NAME}
       - SPRING_DATASOURCE_USERNAME=${AUTH_DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${AUTH_DB_PASSWORD}
+      - DB_USERNAME=${AUTH_DB_USER}
+      - DB_PASSWORD=${AUTH_DB_PASSWORD}
     depends_on:
       - auth-db
     networks:
@@ -101,7 +101,7 @@ services:
     container_name: snippet-service
     restart: unless-stopped
     environment:
-      DB_URL: jdbc:postgresql://snippet_db:5432/${SNIPPET_DB_NAME}
+      DB_URL: jdbc:postgresql://snippet-db:5432/${SNIPPET_DB_NAME}
       DB_USERNAME: ${SNIPPET_DB_USER}
       DB_PASSWORD: ${SNIPPET_DB_PASSWORD}
       PRINTSCRIPT_SERVICE_URL: http://printscript-service:8080
@@ -111,6 +111,8 @@ services:
       AUTH0_AUDIENCE: https://my-api-identifier
       CORS_ALLOWED_ORIGINS: https://grupo10ingsis.duckdns.org,http://localhost:3000,http://localhost:5173
       SERVICE_API_KEY: ${SERVICE_API_KEY}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
     depends_on:
       - snippet-db
       - asset-service
