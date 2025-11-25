@@ -11,6 +11,12 @@ permissions:
   contents: read
   packages: write
 
+env:
+  SSH_HOST: ${{ secrets.SSH_HOST }}
+  SSH_USER: ${{ secrets.SSH_USER }}
+  SSH_PORT: ${{ secrets.SSH_PORT || 22 }}
+  DEPLOY_DIR: /opt/app
+
 jobs:
   wait_ssh:
     runs-on: ubuntu-latest
