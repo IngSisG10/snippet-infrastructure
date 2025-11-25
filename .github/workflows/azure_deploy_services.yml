@@ -49,8 +49,7 @@ jobs:
           ORG="${REPO_FULL%/*}"               # "ingsisg10"
           BASE_REPO="${REPO_FULL##*/}"        # "auth"
 
-          # Regla que dijiste: {nombre-del-repo} + "-service"
-          SERVICE_NAME="${BASE_REPO}-service" # "auth-service"
+          SERVICE_NAME="${BASE_REPO}" # "auth-service"
 
           IMAGE_REPO="ghcr.io/${ORG}/${SERVICE_NAME}"  # "ghcr.io/ingsisg10/auth-service"
           TAG="${{ inputs.tag || 'latest' }}"
