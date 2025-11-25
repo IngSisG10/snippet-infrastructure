@@ -27,6 +27,8 @@ on:
         required: false
       VITE_BACKEND_URL:
         required: false
+      VITE_NGINX_URL:
+        required: true
 
 permissions:
   contents: read
