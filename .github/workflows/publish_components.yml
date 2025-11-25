@@ -3,9 +3,6 @@ name: publish_components.yml
 on:
   workflow_dispatch: {}
   workflow_call: {}
-  push:
-    branches:
-      - main
 
 permissions:
   contents: read

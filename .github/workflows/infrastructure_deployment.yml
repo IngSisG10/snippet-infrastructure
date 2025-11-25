@@ -4,6 +4,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   publish-image-to-ghcr:
     uses: ./.github/workflows/publish_docker_img_to_ghcr.yml
