@@ -55,6 +55,18 @@ jobs:
           echo "image=ghcr.io/${REPO_LC}" >> "$GITHUB_OUTPUT"
           echo "tag=${{ github.event.inputs.tag || 'latest' }}" >> "$GITHUB_OUTPUT"
 
+      - name: Setup SSH key for SCP
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Copy deploy-compose.yml to VM
+        run: |
+          scp -o StrictHostKeyChecking=no -P ${{ env.SSH_PORT }} \
+            ./deploy-compose.yml \
+            ${{ env.SSH_USER }}@${{ env.SSH_HOST }}:${{ env.DEPLOY_DIR }}/deploy-compose.yml
+
       - name: Deploy by SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
