@@ -50,6 +50,7 @@ services:
   printscript-ui:
     image: ghcr.io/ingsisg10/printscript-ui:latest
     container_name: printscript-ui
+    restart: unless-stopped
     networks:
       - shared_network
 
