@@ -11,19 +11,19 @@ permissions:
 
 jobs:
   publish_to_ghcr:
-    uses: .github/workflows/dev/image/publish_to_ghcr.yml
+    uses: .github/workflows/publish_dev_to_ghcr.yml
     with:
       dockerfile_name: 'Dockerfile.dev'
     secrets: inherit
 
   start_vm:
     needs: publish_to_ghcr
-    uses: .github/workflows/dev/azure/start_vm.yml
+    uses: .github/workflows/azure_dev_start_vm.yml
     secrets: inherit
 
   deploy_all_images:
     needs: start_vm
-    uses: .github/workflows/dev/azure/deploy/deploy-all-services-dev.yml
+    uses: .github/workflows/deploy-all-services-dev.yml
     secrets: inherit
 
   maybe_stop_vm:
@@ -31,5 +31,5 @@ jobs:
       - start_vm
       - deploy_all_images
     if: ${{ needs.start-vm.outputs.pre_status == 'VM deallocated' }}
-    uses: .github/workflows/dev/azure/stop_vm.yml
+    uses: .github/workflows/azure_dev_stop_vm.yml
     secrets: inherit
