@@ -1,0 +1,40 @@
+name: azure-dev-vm-start
+on:
+  workflow_dispatch: {}
+  workflow_call:
+    outputs:
+      pre_status:
+        description: "Power state before start"
+        value: ${{ jobs.start.outputs.pre_status }}
+
+permissions:
+  contents: read
+
+jobs:
+  start:
+    runs-on: ubuntu-latest
+    outputs:
+      pre_status: ${{ steps.get_pre.outputs.status }}
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_DEV }}
+
+      - name: Get pre-start status
+        id: get_pre
+        run: |
+          set -euo pipefail
+          STATUS=$(az vm get-instance-view \
+            --name "${{ secrets.AZURE_VM_NAME_DEV }}" \
+            --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
+            --query "instanceView.statuses[?starts_with(code, 'PowerState/')].displayStatus" \
+            -o tsv)
+          echo "VM status before start: $STATUS"
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"          
+
+      - name: Start VM
+        run: |
+          az vm start \
+            --name "${{ secrets.AZURE_VM_NAME_DEV }}" \
+            --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}"
