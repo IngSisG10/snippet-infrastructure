@@ -60,6 +60,12 @@ services:
     image: ghcr.io/ingsisg10/printscript-service:latest
     container_name: printscript-service
     restart: unless-stopped
+    environment:
+      - NEW_RELIC_APP_NAME=printscript-service
+      - NEW_RELIC_LICENSE_KEY=${NEW_RELIC_LICENSE_KEY}
+      - NEW_RELIC_AGENT_ENABLED=${NEW_RELIC_AGENT_ENABLED}
+      - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED=${NEW_RELIC_DISTRIBUTED_TRACING_ENABLED}
+      - NEW_RELIC_LABELS=environment:production;team:ingsis-g10;service:printscript
     networks:
        - shared_network
 
