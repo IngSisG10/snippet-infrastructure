@@ -7,6 +7,11 @@ on:
         description: "Tag de la imagen (ej. v1.2.3)"
         required: false
         default: latest
+      dockerfile_name:
+        description: "the dockerfile used to create the image"
+        required: false
+        type: string
+        default: Dockerfile.prod
 
   workflow_call:
     inputs:
@@ -14,6 +19,11 @@ on:
         type: string
         required: false
         default: latest
+      dockerfile_name:
+        description: "the dockerfile used to create the image"
+        required: false
+        type: string
+        default: Dockerfile.prod
 
 permissions:
   contents: read
@@ -58,7 +68,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: Dockerfile.prod
+          file: ${{ inputs.dockerfile_name }}
           build-args: |
             GITHUB_ACTOR=${{ github.actor }}
             GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}

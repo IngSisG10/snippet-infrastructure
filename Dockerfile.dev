@@ -1,0 +1,15 @@
+# Usa la imagen oficial de Nginx
+FROM nginx:latest
+
+# Eliminar configs por defecto
+RUN rm -f /etc/nginx/nginx.conf && rm -rf /etc/nginx/conf.d/*
+
+# Copiar tu config completa
+COPY nginx-proxy-manager-dev/nginx.conf /etc/nginx/nginx.conf
+
+# Crear carpeta para certbot challenge
+RUN mkdir -p /var/www/certbot
+
+EXPOSE 80 443
+
+CMD ["nginx", "-g", "daemon off;"]
