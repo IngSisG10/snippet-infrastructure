@@ -118,6 +118,11 @@ services:
       - SERVICE_API_KEY=${SERVICE_API_KEY}
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
+      - NEW_RELIC_APP_NAME=snippet-service
+      - NEW_RELIC_LICENSE_KEY=${NEW_RELIC_LICENSE_KEY}
+      - NEW_RELIC_AGENT_ENABLED=${NEW_RELIC_AGENT_ENABLED}
+      - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED=${NEW_RELIC_DISTRIBUTED_TRACING_ENABLED}
+      - NEW_RELIC_LABELS=environment:production;team:ingsis-g10;service:snippet
     depends_on:
       - snippet-db
       - asset-service
