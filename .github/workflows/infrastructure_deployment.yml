@@ -10,18 +10,25 @@ permissions:
 
 jobs:
 
-  start-azure:
-    uses: ./.github/workflows/azure_start_vm.yml
-    secrets: inherit
-
   publish-image-to-ghcr:
     uses: ./.github/workflows/publish_docker_img_to_ghcr.yml
+    secrets: inherit
+
+  start-azure:
+    needs: publish-image-to-ghcr
+    uses: ./.github/workflows/azure_start_vm.yml
     secrets: inherit
 
   deploy-infra-image-to-azure-vm:
     needs:
       - start-azure
-      - publish-image-to-ghcr
     uses: ./.github/workflows/azure_deploy_img.yml
     secrets: inherit
 
+  maybe-stop:
+    needs:
+      - start-azure
+      - deploy-infra-image-to-azure-vm
+    if: ${{ needs.start-vm.outputs.pre_status == 'VM deallocated' }}
+    uses: ./.github/workflows/azure_stop_vm.yml
+    secrets: inherit

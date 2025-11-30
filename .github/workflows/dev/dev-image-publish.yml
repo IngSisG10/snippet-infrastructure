@@ -1,0 +1,35 @@
+name: dev-image-publish.yml
+
+on:
+  push:
+    branches:
+      - dev
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish_to_ghcr:
+    uses: .github/workflows/dev/image/publish_to_ghcr.yml
+    with:
+      dockerfile_name: 'Dockerfile.dev'
+    secrets: inherit
+
+  start_vm:
+    needs: publish_to_ghcr
+    uses: .github/workflows/dev/azure/start_vm.yml
+    secrets: inherit
+
+  deploy_all_images:
+    needs: start_vm
+    uses: .github/workflows/dev/azure/deploy/deploy-all-services-dev.yml
+    secrets: inherit
+
+  maybe_stop_vm:
+    needs:
+      - start_vm
+      - deploy_all_images
+    if: ${{ needs.start-vm.outputs.pre_status == 'VM deallocated' }}
+    uses: .github/workflows/dev/azure/stop_vm.yml
+    secrets: inherit
