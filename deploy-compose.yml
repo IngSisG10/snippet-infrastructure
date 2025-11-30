@@ -79,6 +79,11 @@ services:
       - AUTH0_AUDIENCE=https://my-api-identifier
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
       - SERVICE_API_KEY=${SERVICE_API_KEY}
+      - NEW_RELIC_APP_NAME=auth-service
+      - NEW_RELIC_LICENSE_KEY=${NEW_RELIC_LICENSE_KEY}
+      - NEW_RELIC_AGENT_ENABLED=${NEW_RELIC_AGENT_ENABLED}
+      - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED=${NEW_RELIC_DISTRIBUTED_TRACING_ENABLED}
+      - NEW_RELIC_LABELS=environment:production;team:ingsis-g10;service:auth
     depends_on:
       - auth-db
     networks:
