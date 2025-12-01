@@ -7,7 +7,7 @@ set -e
 
 # Dominio(s) - usando tu DuckDNS
 domains=(
-  "grupo10ingsis.duckdns.org"
+  "grupo10ingsis-dev.duckdns.org"
 )
 
 # Email para Let's Encrypt
@@ -17,7 +17,7 @@ email="franmanfredi@hotmail.com"
 data_path="/opt/app/data/certbot"
 
 # Ruta ABSOLUTA al docker compose
-compose_file="/opt/app/deploy-compose.yml"
+compose_file="/opt/app/deploy-compose-dev.yml"
 
 # Tamaño de clave
 rsa_key_size=4096
@@ -26,17 +26,10 @@ rsa_key_size=4096
 staging=1
 
 ########################################
-# Detectar docker compose / docker-compose
+# Docker Compose
 ########################################
 
-if command -v "docker compose" &> /dev/null; then
-  DC="docker compose"
-elif command -v docker-compose &> /dev/null; then
-  DC="docker-compose"
-else
-  echo "Error: no encontré ni 'docker compose' ni 'docker-compose' en el PATH." >&2
-  exit 1
-fi
+DC="docker compose -f $compose_file"
 
 # Verificar que el archivo de compose exista
 if [ ! -f "$compose_file" ]; then
@@ -79,9 +72,14 @@ fi
 main_domain="${domains[0]}"
 echo "### Creando certificado DUMMY para $main_domain ..."
 
-mkdir -p "$data_path/conf/live/$main_domain"
+# Crear la carpeta dentro del contenedor (reflejado en el volumen)
+$DC run --rm \
+  --entrypoint mkdir \
+  certbot \
+  -p "/etc/letsencrypt/live/$main_domain"
 
-$DC -f "$compose_file" run --rm \
+# Generar el certificado dummy
+$DC run --rm \
   --entrypoint openssl \
   certbot \
   req -x509 -nodes -newkey "rsa:${rsa_key_size}" -days 1 \
@@ -95,7 +93,7 @@ echo
 ########################################
 
 echo "### Levantando nginx ..."
-$DC -f "$compose_file" up --force-recreate -d nginx
+$DC up --force-recreate -d nginx
 echo
 
 ########################################
@@ -103,7 +101,7 @@ echo
 ########################################
 
 echo "### Borrando certificado DUMMY para $main_domain ..."
-$DC -f "$compose_file" run --rm \
+$DC run --rm \
   --entrypoint rm \
   certbot \
   -Rf \
@@ -134,14 +132,17 @@ if [ "$staging" != "0" ]; then
   staging_arg="--staging"
 fi
 
-$DC -f "$compose_file" run --rm certbot certonly \
-  --webroot -w /var/www/certbot \
-  $staging_arg \
-  $email_arg \
-  "${domain_args[@]}" \
-  --rsa-key-size "$rsa_key_size" \
-  --agree-tos \
-  --force-renewal
+$DC run --rm \
+  --entrypoint certbot \
+  certbot \
+  certonly \
+    --webroot -w /var/www/certbot \
+    $staging_arg \
+    $email_arg \
+    "${domain_args[@]}" \
+    --rsa-key-size "$rsa_key_size" \
+    --agree-tos \
+    --force-renewal
 echo
 
 ########################################
@@ -149,6 +150,6 @@ echo
 ########################################
 
 echo "### Recargando nginx con los nuevos certificados ..."
-$DC -f "$compose_file" exec nginx nginx -s reload || true
+$DC exec nginx nginx -s reload || true
 
 echo "### Listo."
