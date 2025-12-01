@@ -29,7 +29,7 @@ staging=1
 # Detectar docker compose / docker-compose
 ########################################
 
-if command -v "docker compose" &> /dev/null; then
+if docker compose version &> /dev/null; then
   DC="docker compose"
 elif command -v docker-compose &> /dev/null; then
   DC="docker-compose"
