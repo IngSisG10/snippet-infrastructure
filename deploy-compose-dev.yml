@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
 
-  # --- CAPA DE ENTRADA (REVERSE PROXY Y SSL) ---
+  # --- CAPA DE ENTRADA (REVERSE PROXY Y SSL) ----
 
   nginx:
     image: ghcr.io/ingsisg10/snippet-infrastructure-dev:latest  # o incluso podés seguir usando tu imagen, da igual
