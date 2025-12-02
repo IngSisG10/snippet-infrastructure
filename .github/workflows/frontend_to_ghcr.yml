@@ -75,7 +75,7 @@ jobs:
             VITE_AUTH0_AUDIENCE=${{ secrets.VITE_AUTH0_AUDIENCE }}
             VITE_FRONTEND_URL=${{ 'https://grupo10ingsis-dev.duckdns.org' }}
             VITE_BACKEND_URL=${{ 'https://grupo10ingsis-dev.duckdns.org' }}
-            VITE_NGINX_URL=${{ 'https://grupo10ingsis-dev.duckdns.org' }}
+            VITE_NGINX_URL=${{ 'https://grupo10ingsis-dev.duckdns.org/snippet-service' }}
           push: true
           tags: |
             ${{ steps.tags.outputs.image }}:${{ steps.tags.outputs.tag }}
