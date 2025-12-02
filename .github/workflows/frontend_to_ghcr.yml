@@ -26,7 +26,7 @@ on:
       VITE_BACKEND_URL:
         required: false
       VITE_NGINX_URL:
-        required: true
+        required: false
 
 permissions:
   contents: read
@@ -73,9 +73,9 @@ jobs:
             VITE_AUTH0_DOMAIN=${{ secrets.VITE_AUTH0_DOMAIN }}
             VITE_AUTH0_CLIENT_ID=${{ secrets.VITE_AUTH0_CLIENT_ID }}
             VITE_AUTH0_AUDIENCE=${{ secrets.VITE_AUTH0_AUDIENCE }}
-            VITE_FRONTEND_URL=${{ secrets.VITE_FRONTEND_URL || 'https://grupo10ingsis.duckdns.org' }}
-            VITE_BACKEND_URL=${{ secrets.VITE_BACKEND_URL || 'https://grupo10ingsis.duckdns.org' }}
-            VITE_NGINX_URL=${{ secrets.VITE_NGINX_URL }}
+            VITE_FRONTEND_URL=${{ 'https://grupo10ingsis-dev.duckdns.org' }}
+            VITE_BACKEND_URL=${{ 'https://grupo10ingsis-dev.duckdns.org' }}
+            VITE_NGINX_URL=${{ 'https://grupo10ingsis-dev.duckdns.org' }}
           push: true
           tags: |
             ${{ steps.tags.outputs.image }}:${{ steps.tags.outputs.tag }}
